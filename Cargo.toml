@@ -1,0 +1,10 @@
+[package]
+name = "um32"
+version = "0.0.1"
+authors = ["Jesse C. Grillo <jesse.grillo@gmail.com>"]
+
+[dependencies]
+byteorder = "1.0.*"
+
+[profile.release]
+debug = true
