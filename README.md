@@ -50,5 +50,5 @@ According to [this source](https://github.com/rlew/um/tree/master/ums), the
 `midmark.um` benchmark should run in "about one second".
 
 These blog posts provide a helpful introduction to profiling Rust programs:
-http://blog.adamperry.me/rust/2016/07/24/profiling-rust-perf-flamegraph/
-http://www.codeofview.com/fix-rs/2017/01/24/how-to-optimize-rust-programs-on-linux/
+ 1. http://blog.adamperry.me/rust/2016/07/24/profiling-rust-perf-flamegraph/
+ 2. http://www.codeofview.com/fix-rs/2017/01/24/how-to-optimize-rust-programs-on-linux/
