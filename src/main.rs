@@ -4,7 +4,7 @@ use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{stdout, stdin, Cursor};
-use std::process;
+use std::{process, mem};
 
 use byteorder::{ReadBytesExt, BigEndian};
 
@@ -167,8 +167,11 @@ impl Memory {
         if address == len {
             self.heap.push(zeros);
         } else {
-            self.heap.remove(address);
-            self.heap.insert(address, zeros);
+            mem::replace(
+                self.heap.get_mut(address)
+                    .expect("memory was not previously allocated"),
+                zeros
+            );
         }
 
         address
@@ -177,8 +180,11 @@ impl Memory {
     // deallocate the memory at the given address.
     pub fn abandon(&mut self, address: usize) {
         if self.heap.get(address).is_some() {
-            self.heap.remove(address);
-            self.heap.insert(address, Vec::new());
+            mem::replace(
+                self.heap.get_mut(address)
+                    .expect("memory was not previously allocated"),
+                Vec::new()
+            );
         } else {
             panic!("address already unallocated");
         }
@@ -203,8 +209,11 @@ impl Memory {
         let memory = self.heap.get_mut(address)
             .expect("memory was unallocated");
 
-        memory.remove(idx);
-        memory.insert(idx, value);
+        mem::replace(
+            memory.get_mut(idx)
+                .expect("no value present at given idx"),
+            value
+        );
     }
 
     // replace the program with the vector at the given address
@@ -213,8 +222,11 @@ impl Memory {
             .expect("found no program at the given address")
             .clone();
 
-        self.heap.remove(PROGRAM_ADDRESS);
-        self.heap.insert(PROGRAM_ADDRESS, program);
+        mem::replace(
+            self.heap.get_mut(PROGRAM_ADDRESS)
+                .expect("found no existing program"),
+            program
+        );
     }
 
     fn get_lowest_unallocated_address(&self) -> usize {

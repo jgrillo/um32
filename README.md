@@ -14,7 +14,7 @@ and 14 opcodes. Universal Machine images are stored as a sequence of unsigned
 ## Implementation
 
 This is an extremely naive implementation written as an exercise to become 
-better acquainted with Rust. It's currently about two orders of magnitude 
+better acquainted with Rust. It's currently about an order of magnitude 
 slower than a fast Universal Machine implementation. I'd like to correct this.
 
 ### TODO
@@ -29,7 +29,7 @@ anything else. This will need to be fixed before trying to optimize.
  
 #### performance 
 
-This thing is about two orders of magnitude slower than it should be:
+This thing is about an order of magnitude slower than it should be:
 ```
 [jgrillo@localhost um32]$ time ./target/release/um32 ~/src/boundvariable/umbin/midmark.um 
 read 120440 bytes from /home/jgrillo/src/boundvariable/umbin/midmark.um
@@ -41,9 +41,9 @@ read 120440 bytes from /home/jgrillo/src/boundvariable/umbin/midmark.um
 0.   583e02ae.490775c0
 Benchmark complete.
 
-real	1m15.279s
-user	1m15.123s
-sys	0m0.012s
+real	0m11.254s
+user	0m11.232s
+sys	0m0.007s
 
 ```
 According to [this source](https://github.com/rlew/um/tree/master/ums), the 
