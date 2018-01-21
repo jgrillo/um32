@@ -179,15 +179,11 @@ impl Memory {
 
     // deallocate the memory at the given address.
     pub fn abandon(&mut self, address: usize) {
-        if self.heap.get(address).is_some() {
-            mem::replace(
-                self.heap.get_mut(address)
-                    .expect("memory was not previously allocated"),
-                Vec::new()
-            );
-        } else {
-            panic!("address already unallocated");
-        }
+        mem::replace(
+            self.heap.get_mut(address)
+                .expect("memory was not previously allocated"),
+            Vec::new()
+        );
     }
 
     // supply contents of the memory at the given address if
