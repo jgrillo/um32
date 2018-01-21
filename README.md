@@ -17,8 +17,9 @@ and 14 opcodes. Universal Machine images are stored as a sequence of unsigned
 ## Implementation
 
 This is an extremely naive implementation written as an exercise to become 
-better acquainted with Rust. It's currently about an order of magnitude 
-slower than a fast Universal Machine implementation. I'd like to correct this.
+better acquainted with Rust. It's currently a bit slower than Joe's 
+[C++ implementation](https://github.com/llllllllll/um-32). I'd like to correct 
+this.
 
 ### TODO
 
@@ -32,8 +33,23 @@ anything else. This will need to be fixed before trying to optimize.
  
 #### performance 
 
-This thing is about an order of magnitude slower than it should be:
 ```
+[jgrillo@localhost um32]$ sudo lshw -class cpu
+  *-cpu                     
+       description: CPU
+       product: Intel(R) Core(TM) i7-6820HQ CPU @ 2.70GHz
+       vendor: Intel Corp.
+       physical id: 6
+       bus info: cpu@0
+       version: Intel(R) Core(TM) i7-6820HQ CPU @ 2.70GHz
+       serial: None
+       slot: U3E1
+       size: 1392MHz
+       capacity: 4005MHz
+       width: 64 bits
+       clock: 100MHz
+       capabilities: x86-64 fpu fpu_exception wp vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb invpcid_single pti retpoline intel_pt tpr_shadow vnmi flexpriority ept vpid fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm mpx rdseed adx smap clflushopt xsaveopt xsavec xgetbv1 xsaves dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp cpufreq
+       configuration: cores=4 enabledcores=4 threads=8
 [jgrillo@localhost um32]$ time ./target/release/um32 ~/src/boundvariable/umbin/midmark.um 
 read 120440 bytes from /home/jgrillo/src/boundvariable/umbin/midmark.um
  == UM beginning stress test / benchmark.. ==
@@ -44,9 +60,48 @@ read 120440 bytes from /home/jgrillo/src/boundvariable/umbin/midmark.um
 0.   583e02ae.490775c0
 Benchmark complete.
 
-real	0m11.254s
-user	0m11.232s
-sys	0m0.007s
+real	0m0.640s
+user	0m0.634s
+sys	0m0.006s
+
+[jgrillo@localhost um32]$ time ./target/release/um32 ~/src/boundvariable/sandmark.umz 
+read 56364 bytes from /home/jgrillo/src/boundvariable/sandmark.umz
+trying to Allocate array of size 0..
+trying to Abandon size 0 allocation..
+trying to Allocate size 11..
+trying Array Index on allocated array..
+trying Amendment of allocated array..
+checking Amendment of allocated array..
+trying Alloc(a,a) and amending it..
+comparing multiple allocations..
+pointer arithmetic..
+check old allocation..
+simple tests ok!
+about to load program from some allocated array..
+success.
+verifying that the array and its copy are the same...
+success.
+testing aliasing..
+success.
+free after loadprog..
+success.
+loadprog ok.
+ == SANDmark 19106 beginning stress test / benchmark.. ==
+100. 12345678.09abcdef
+99.  6d58165c.2948d58d
+98.  0f63b9ed.1d9c4076
+
+   ...
+
+3.   7c7394b2.476c1ee5
+2.   f3a52453.19cc755d
+1.   2c80b43d.5646302f
+0.   a8d1619e.5540e6cf
+SANDmark complete.
+
+real	0m39.053s
+user	0m38.979s
+sys	0m0.004s
 
 ```
 According to [this source](https://github.com/rlew/um/tree/master/ums), the 

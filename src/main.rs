@@ -147,38 +147,44 @@ impl Registers {
 
 #[derive(Debug)]
 struct Memory {
+    free_list: Vec<usize>,
     heap: Vec<Vec<u32>>
 }
 
 impl Memory {
     pub fn new(instructions: Vec<u32>) -> Memory {
         Memory {
+            free_list: Vec::new(),
             heap: vec![instructions]
         }
     }
 
-    // allocate memory initialized with the given values, returns the
-    // address of the newly allocated memory.
+    // allocate memory initialized with a zeros vec of the given size,
+    // returns the address of the newly allocated memory.
     pub fn allocate(&mut self, size: usize) -> usize {
-        let len = self.heap.len();
-        let address = self.get_lowest_unallocated_address();
-        let zeros = vec![0u32; size];
+        let zeros = vec![0_u32; size];
 
-        if address == len {
+        if self.free_list.len() == 0 {
             self.heap.push(zeros);
+
+            self.heap.len() - 1
         } else {
+            let address = self.free_list.pop()
+                .expect("no free addresses available");
+
             mem::replace(
                 self.heap.get_mut(address)
                     .expect("memory was not previously allocated"),
                 zeros
             );
-        }
 
-        address
+            address
+        }
     }
 
     // deallocate the memory at the given address.
     pub fn abandon(&mut self, address: usize) {
+        self.free_list.push(address);
         mem::replace(
             self.heap.get_mut(address)
                 .expect("memory was not previously allocated"),
@@ -223,16 +229,6 @@ impl Memory {
                 .expect("found no existing program"),
             program
         );
-    }
-
-    fn get_lowest_unallocated_address(&self) -> usize {
-        for (idx, value) in self.heap.iter().enumerate() {
-            if value.len() == 0 {
-                return idx
-            }
-        }
-
-        self.heap.len()
     }
 }
 
