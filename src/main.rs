@@ -17,7 +17,7 @@ fn extract_bits(value: u32, start: u32, n: u32) -> u32 {
 }
 
 // the UM-32 has 14 opcodes.
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 enum Opcode {
     Mov,
     ArrayGet,
@@ -91,7 +91,7 @@ fn parse_value(instruction: u32, op: &Opcode) -> Option<u32> {
 // each machine instruction is deserialized into a convenient
 // representation.
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug)]
 struct Instruction {
     op: Opcode,
     a: u32,
