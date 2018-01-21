@@ -1,5 +1,8 @@
 # UM-32
 
+[![Build Status](https://travis-ci.org/jgrillo/um32.svg?branch=master)](https://travis-ci.org/jgrillo/um32)
+[![Crate](https://img.shields.io/crates/v/um32.svg)](https://crates.io/crates/um32)
+
 This is a Rust implementation of the [UM-32 "Universal Machine"](https://esolangs.org/wiki/UM-32).
 You can find the specification, various VM images, and more information about
 the contest which originally spawned this horror at [boundvariable.org](http://boundvariable.org/).
