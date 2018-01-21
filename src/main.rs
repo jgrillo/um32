@@ -409,7 +409,7 @@ fn read_instructions(filename: &str) -> Vec<u32> {
 fn main() {
     let args: Vec<String> = env::args().collect();
     let filename = &args[1];
-    let mut instructions = read_instructions(filename);
+    let instructions = read_instructions(filename);
     let mut memory= Memory::new(instructions);
     let mut registers = Registers::new();
     let mut pc: usize = 0;
