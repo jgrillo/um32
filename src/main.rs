@@ -101,7 +101,7 @@ struct Instruction {
 }
 
 impl Instruction {
-    pub fn new(instruction: u32) -> Instruction {
+    fn new(instruction: u32) -> Instruction {
         let op = parse_op(instruction);
         let a = parse_a(instruction, &op);
         let b = parse_b(instruction, &op);
@@ -126,19 +126,19 @@ struct Registers {
 }
 
 impl Registers {
-    pub fn new() -> Registers {
+    fn new() -> Registers {
         Registers {
             registers: [0_u32; 8]
         }
     }
 
     // get the value at the given register.
-    pub fn get(&self, register: usize) -> u32 {
+    fn get(&self, register: usize) -> u32 {
         self.registers[register]
     }
 
     // set the value in the given register.
-    pub fn set(&mut self, register: usize, value: u32) {
+    fn set(&mut self, register: usize, value: u32) {
         self.registers[register] = value
     }
 }
@@ -152,7 +152,7 @@ struct Memory {
 }
 
 impl Memory {
-    pub fn new(instructions: Vec<u32>) -> Memory {
+    fn new(instructions: Vec<u32>) -> Memory {
         Memory {
             free_list: Vec::new(),
             heap: vec![instructions]
@@ -161,7 +161,7 @@ impl Memory {
 
     // allocate memory initialized with a zeros vec of the given size,
     // returns the address of the newly allocated memory.
-    pub fn allocate(&mut self, size: usize) -> usize {
+    fn allocate(&mut self, size: usize) -> usize {
         let zeros = vec![0_u32; size];
 
         if self.free_list.len() == 0 {
@@ -183,7 +183,7 @@ impl Memory {
     }
 
     // deallocate the memory at the given address.
-    pub fn abandon(&mut self, address: usize) {
+    fn abandon(&mut self, address: usize) {
         self.free_list.push(address);
         mem::replace(
             self.heap.get_mut(address)
@@ -194,12 +194,12 @@ impl Memory {
 
     // supply contents of the memory at the given address if
     // initialized, None otherwise.
-    pub fn get(&self, address: usize) -> Option<&Vec<u32>> {
+    fn get(&self, address: usize) -> Option<&Vec<u32>> {
         self.heap.get(address)
     }
 
     // get the instruction corresponding to the given program counter
-    pub fn get_instruction(&self, pc: usize) -> Instruction {
+    fn get_instruction(&self, pc: usize) -> Instruction {
         match self.heap.get(PROGRAM_ADDRESS) {
             Some(program) => Instruction::new(program[pc]),
             None => panic!("program was unallocated")
@@ -207,7 +207,7 @@ impl Memory {
     }
 
     // write a value into the given array index at the given address.
-    pub fn set(&mut self, address: usize, idx: usize, value: u32) {
+    fn set(&mut self, address: usize, idx: usize, value: u32) {
         let memory = self.heap.get_mut(address)
             .expect("memory was unallocated");
 
@@ -219,7 +219,7 @@ impl Memory {
     }
 
     // replace the program with the vector at the given address
-    pub fn load(&mut self, address: usize) {
+    fn load(&mut self, address: usize) {
         let program = self.heap.get(address)
             .expect("found no program at the given address")
             .clone();
@@ -234,144 +234,162 @@ impl Memory {
 
 // the machine has 14 opcodes
 
-fn mov(instruction: &Instruction, registers: &mut Registers) {
-    let a = instruction.a as usize;
-    let b = instruction.b.unwrap() as usize;
-    let c = instruction.c.unwrap() as usize;
-
-    if registers.get(c) != 0 {
-        let value = registers.get(b);
-        registers.set(a, value);
-    }
+struct Machine {
+    memory: Memory,
+    registers: Registers
 }
 
-fn array_get(instruction: &Instruction, registers: &mut Registers, memory: &Memory) {
-    let a = instruction.a as usize;
-    let b = instruction.b.unwrap() as usize;
-    let c = instruction.c.unwrap() as usize;
-
-    let address = registers.get(b) as usize;
-
-    let array = memory.get(address)
-        .expect("found unallocated array at the given address");
-    let idx = registers.get(c) as usize;
-
-    let value = array[idx];
-
-    registers.set(a, value);
-}
-
-fn array_set(instruction: &Instruction, registers: &mut Registers, memory: &mut Memory) {
-    let a = instruction.a as usize;
-    let b = instruction.b.unwrap() as usize;
-    let c = instruction.c.unwrap() as usize;
-
-    let address = registers.get(a) as usize;
-    let idx = registers.get(b) as usize;
-    let value = registers.get(c);
-
-    memory.set(address, idx, value);
-}
-
-fn add(instruction: &Instruction, registers: &mut Registers) {
-    let a = instruction.a as usize;
-    let b = instruction.b.unwrap() as usize;
-    let c = instruction.c.unwrap() as usize;
-
-    let value = registers.get(b).wrapping_add(registers.get(c));
-
-    registers.set(a, value);
-}
-
-fn mul(instruction: &Instruction, registers: &mut Registers) {
-    let a = instruction.a as usize;
-    let b = instruction.b.unwrap() as usize;
-    let c = instruction.c.unwrap() as usize;
-
-    let value = registers.get(b).wrapping_mul(registers.get(c));
-
-    registers.set(a, value);
-}
-
-fn div(instruction: &Instruction, registers: &mut Registers) {
-    let a = instruction.a as usize;
-    let b = instruction.b.unwrap() as usize;
-    let c = instruction.c.unwrap() as usize;
-
-    let value = registers.get(b).wrapping_div(registers.get(c));
-    registers.set(a, value);
-}
-
-fn nand(instruction: &Instruction, registers: &mut Registers) {
-    let a = instruction.a as usize;
-    let b = instruction.b.unwrap() as usize;
-    let c = instruction.c.unwrap() as usize;
-
-    let value = !(registers.get(b) & registers.get(c));
-
-    registers.set(a, value);
-}
-
-fn allocate(instruction: &Instruction, registers: &mut Registers, memory: &mut Memory) {
-    let b = instruction.b.unwrap() as usize;
-    let c = instruction.c.unwrap() as usize;
-
-    let size = registers.get(c) as usize;
-
-    let address = memory.allocate(size);
-
-    registers.set(b, address as u32);
-}
-
-fn abandon(instruction: &Instruction, registers: &Registers, memory: &mut Memory) {
-    let c = instruction.c.unwrap() as usize;
-    let address = registers.get(c) as usize;
-
-    memory.abandon(address);
-}
-
-fn output(instruction: &Instruction, registers: &Registers) {
-    let c = instruction.c.unwrap() as usize;
-
-    let value = registers.get(c);
-
-    let byte = value as u8;
-    stdout().write(&[byte]).unwrap();
-}
-
-fn input(instruction: &Instruction, registers: &mut Registers) {
-    let c = instruction.c.unwrap() as usize;
-
-    match stdin().bytes().next().unwrap() { // EOF will be None
-        Ok(value) => {
-            if value as char == '\n' {
-                registers.set(c, std::u32::MAX);
-            } else {
-                registers.set(c, value as u32);
-            }
-        },
-        Err(e) => panic!("Encountered error while reading input: {}", e)
-    }
-}
-
-fn load(instruction: &Instruction, registers: &Registers, memory: &mut Memory) -> usize {
-    let b = instruction.b.unwrap() as usize;
-    let c = instruction.c.unwrap() as usize;
-
-    let address = registers.get(b) as usize;
-
-    if address != PROGRAM_ADDRESS {
-        memory.load(address);
+impl Machine {
+    fn new(instructions: Vec<u32>) -> Machine {
+        Machine {
+            memory: Memory::new(instructions),
+            registers: Registers::new()
+        }
     }
 
-    registers.get(c) as usize
-}
+    fn get_instruction(&self, pc: usize) -> Instruction {
+        self.memory.get_instruction(pc)
+    }
 
-fn ortho(instruction: &Instruction, registers: &mut Registers) {
-    let a = instruction.a as usize;
-    let value = instruction.value.unwrap();
+    fn mov(&mut self, instruction: Instruction) {
+        let a = instruction.a as usize;
+        let b = instruction.b.unwrap() as usize;
+        let c = instruction.c.unwrap() as usize;
 
-    registers.set(a, value);
+        if self.registers.get(c) != 0 {
+            let value = self.registers.get(b);
+            self.registers.set(a, value);
+        }
+    }
+
+    fn array_get(&mut self, instruction: Instruction) {
+        let a = instruction.a as usize;
+        let b = instruction.b.unwrap() as usize;
+        let c = instruction.c.unwrap() as usize;
+
+        let address = self.registers.get(b) as usize;
+
+        let array = self.memory.get(address)
+            .expect("found unallocated array at the given address");
+        let idx = self.registers.get(c) as usize;
+
+        let value = array[idx];
+
+        self.registers.set(a, value);
+    }
+
+    fn array_set(&mut self, instruction: Instruction) {
+        let a = instruction.a as usize;
+        let b = instruction.b.unwrap() as usize;
+        let c = instruction.c.unwrap() as usize;
+
+        let address = self.registers.get(a) as usize;
+        let idx = self.registers.get(b) as usize;
+        let value = self.registers.get(c);
+
+        self.memory.set(address, idx, value);
+    }
+
+    fn add(&mut self, instruction: Instruction) {
+        let a = instruction.a as usize;
+        let b = instruction.b.unwrap() as usize;
+        let c = instruction.c.unwrap() as usize;
+
+        let value = self.registers.get(b).wrapping_add(self.registers.get(c));
+
+        self.registers.set(a, value);
+    }
+
+    fn mul(&mut self, instruction: Instruction) {
+        let a = instruction.a as usize;
+        let b = instruction.b.unwrap() as usize;
+        let c = instruction.c.unwrap() as usize;
+
+        let value = self.registers.get(b).wrapping_mul(self.registers.get(c));
+
+        self.registers.set(a, value);
+    }
+
+    fn div(&mut self, instruction: Instruction) {
+        let a = instruction.a as usize;
+        let b = instruction.b.unwrap() as usize;
+        let c = instruction.c.unwrap() as usize;
+
+        let value = self.registers.get(b).wrapping_div(self.registers.get(c));
+        self.registers.set(a, value);
+    }
+
+    fn nand(&mut self, instruction: Instruction) {
+        let a = instruction.a as usize;
+        let b = instruction.b.unwrap() as usize;
+        let c = instruction.c.unwrap() as usize;
+
+        let value = !(self.registers.get(b) & self.registers.get(c));
+
+        self.registers.set(a, value);
+    }
+
+    fn allocate(&mut self, instruction: Instruction) {
+        let b = instruction.b.unwrap() as usize;
+        let c = instruction.c.unwrap() as usize;
+
+        let size = self.registers.get(c) as usize;
+
+        let address = self.memory.allocate(size);
+
+        self.registers.set(b, address as u32);
+    }
+
+    fn abandon(&mut self, instruction: Instruction) {
+        let c = instruction.c.unwrap() as usize;
+        let address = self.registers.get(c) as usize;
+
+        self.memory.abandon(address);
+    }
+
+    fn output(&self, instruction: Instruction) {
+        let c = instruction.c.unwrap() as usize;
+
+        let value = self.registers.get(c);
+
+        let byte = value as u8;
+        stdout().write(&[byte]).unwrap();
+    }
+
+    fn input(&mut self, instruction: Instruction) {
+        let c = instruction.c.unwrap() as usize;
+
+        match stdin().bytes().next().unwrap() { // EOF will be None
+            Ok(value) => {
+                if value as char == '\n' {
+                    self.registers.set(c, std::u32::MAX);
+                } else {
+                    self.registers.set(c, value as u32);
+                }
+            },
+            Err(e) => panic!("Encountered error while reading input: {}", e)
+        }
+    }
+
+    fn load(&mut self, instruction: Instruction) -> usize {
+        let b = instruction.b.unwrap() as usize;
+        let c = instruction.c.unwrap() as usize;
+
+        let address = self.registers.get(b) as usize;
+
+        if address != PROGRAM_ADDRESS {
+            self.memory.load(address);
+        }
+
+        self.registers.get(c) as usize
+    }
+
+    fn ortho(&mut self, instruction: Instruction) {
+        let a = instruction.a as usize;
+        let value = instruction.value.unwrap();
+
+        self.registers.set(a, value);
+    }
 }
 
 // read machine instructions from file
@@ -406,29 +424,28 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let filename = &args[1];
     let instructions = read_instructions(filename);
-    let mut memory= Memory::new(instructions);
-    let mut registers = Registers::new();
+    let mut machine = Machine::new(instructions);
     let mut pc: usize = 0;
 
     loop { // run the machine until it terminates
-        let instruction = memory.get_instruction(pc);
+        let instruction = machine.get_instruction(pc);
         pc += 1;
 
         match instruction.op {
-            Opcode::Mov => mov(&instruction, &mut registers),
-            Opcode::ArrayGet => array_get(&instruction, &mut registers, &memory),
-            Opcode::ArraySet => array_set(&instruction, &mut registers, &mut memory),
-            Opcode::Add => add(&instruction, &mut registers),
-            Opcode::Mul => mul(&instruction, &mut registers),
-            Opcode::Div => div(&instruction, &mut registers),
-            Opcode::Nand => nand(&instruction, &mut registers),
+            Opcode::Mov => machine.mov(instruction),
+            Opcode::ArrayGet => machine.array_get(instruction),
+            Opcode::ArraySet => machine.array_set(instruction),
+            Opcode::Add => machine.add(instruction),
+            Opcode::Mul => machine.mul(instruction),
+            Opcode::Div => machine.div(instruction),
+            Opcode::Nand => machine.nand(instruction),
             Opcode::Halt => process::exit(0),
-            Opcode::Allocate => allocate(&instruction, &mut registers, &mut memory),
-            Opcode::Abandon => abandon(&instruction, &registers, &mut memory),
-            Opcode::Output => output(&instruction, &registers),
-            Opcode::Input => input(&instruction, &mut registers),
-            Opcode::Load => pc = load(&instruction, &registers, &mut memory),
-            Opcode::Ortho => ortho(&instruction, &mut registers),
+            Opcode::Allocate => machine.allocate(instruction),
+            Opcode::Abandon => machine.abandon(instruction),
+            Opcode::Output => machine.output(instruction),
+            Opcode::Input => machine.input(instruction),
+            Opcode::Load => pc = machine.load(instruction),
+            Opcode::Ortho => machine.ortho(instruction),
             Opcode::Err => panic!(
                 "Unknown opcode for instruction {:?}", instruction
             )

@@ -60,9 +60,9 @@ read 120440 bytes from /home/jgrillo/src/boundvariable/umbin/midmark.um
 0.   583e02ae.490775c0
 Benchmark complete.
 
-real	0m0.640s
-user	0m0.634s
-sys	0m0.006s
+real	0m0.655s
+user	0m0.651s
+sys	0m0.002s
 
 [jgrillo@localhost um32]$ time ./target/release/um32 ~/src/boundvariable/sandmark.umz 
 read 56364 bytes from /home/jgrillo/src/boundvariable/sandmark.umz
@@ -99,14 +99,15 @@ loadprog ok.
 0.   a8d1619e.5540e6cf
 SANDmark complete.
 
-real	0m39.053s
-user	0m38.979s
-sys	0m0.004s
+real	0m40.584s
+user	0m40.451s
+sys	0m0.020s
 
 ```
 According to [this source](https://github.com/rlew/um/tree/master/ums), the 
 `midmark.um` benchmark should run in "about one second".
 
-These blog posts provide a helpful introduction to profiling Rust programs:
+These blog posts and articles provide a helpful introduction to profiling Rust programs:
  1. http://blog.adamperry.me/rust/2016/07/24/profiling-rust-perf-flamegraph/
  2. http://www.codeofview.com/fix-rs/2017/01/24/how-to-optimize-rust-programs-on-linux/
+ 3. https://gist.github.com/jFransham/369a86eff00e5f280ed25121454acec1

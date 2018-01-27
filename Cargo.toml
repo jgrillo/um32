@@ -4,7 +4,7 @@ description = "A UM-32 Universal Machine implemented in Rust"
 readme = "README.md"
 license = "MIT"
 repository = "https://github.com/jgrillo/um32"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["Jesse C. Grillo <jesse.grillo@gmail.com>"]
 
 [dependencies]
