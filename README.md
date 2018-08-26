@@ -116,9 +116,29 @@ These blog posts and articles provide a helpful introduction to profiling Rust p
 *NOTE*: Llogiq's post contains some very important advice on
 configuring cargo to tell rustc to emit code optimized for a
 particular CPU. The running times documented above were measured with
-a binary compiled using the following settings in `~/.cargo/config`:
+a binary compiled using  the following settings in `~/.cargo/config`:
 
 ```toml
 [target.'cfg(any(windows, unix))']
-rustflags = ["-C target-cpu=native"]
+rustflags = ["-C", "target-cpu=native"]
+```
+
+The following toolchain was used:
+
+```
+[jgrillo@t460p um32]$ rustup show
+Default host: x86_64-unknown-linux-gnu
+
+installed toolchains
+--------------------
+
+stable-x86_64-unknown-linux-gnu (default)
+beta-x86_64-unknown-linux-gnu
+nightly-x86_64-unknown-linux-gnu
+
+active toolchain
+----------------
+
+stable-x86_64-unknown-linux-gnu (default)
+rustc 1.28.0 (9634041f0 2018-07-30)
 ```
